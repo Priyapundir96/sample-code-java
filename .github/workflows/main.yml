@@ -48,19 +48,19 @@ jobs:
         cat test-results/test_results.csv
 
     - name: Upload CSV test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4  # Updated to v4
       with:
         name: test-results-csv
         path: test-results/test_results.csv  # Upload the CSV test results file
 
     - name: Upload JAR artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4  # Updated to v4
       with:
         name: SampleCode-jar
         path: target/SampleCode.jar  # Adjust path if needed
 
     - name: Upload test results (Surefire)
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4  # Updated to v4
       with:
         name: surefire-reports
         path: target/surefire-reports  # Upload Surefire test reports
@@ -68,4 +68,3 @@ jobs:
     - name: Add summary to download the test results CSV
       run: |
         echo "### [Download the test results CSV](https://github.com/${{ github.repository }}/suites/${{ github.run_id }}/artifacts)" >> $GITHUB_STEP_SUMMARY
-
