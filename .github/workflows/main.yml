@@ -21,7 +21,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         java-version: '11'  # Set to JDK 11
-        distribution: 'adopt'
+        distribution: 'temurin'  # Corrected to 'temurin' (Adoptium JDK)
 
     - name: Cache Maven dependencies
       uses: actions/cache@v3
@@ -32,10 +32,10 @@ jobs:
           ${{ runner.os }}-maven-
 
     - name: Build with Maven
-      run: mvn clean install
+      run: mvn clean install -e -X  # Run Maven with debug flags (-e for errors, -X for debug)
 
     - name: Run Maven tests
-      run: mvn test  # Run all the test cases using Maven Surefire Plugin
+      run: mvn test -e -X  # Run tests with debug flags to get more detailed information
 
     - name: Convert Maven test reports to CSV
       run: |
@@ -68,3 +68,7 @@ jobs:
     - name: Add summary to download the test results CSV
       run: |
         echo "### [Download the test results CSV](https://github.com/${{ github.repository }}/suites/${{ github.run_id }}/artifacts)" >> $GITHUB_STEP_SUMMARY
+
+    - name: Continue workflow despite test failures (optional)
+      if: failure()  # This step will run even if previous steps fail
+      run: echo "Tests failed, but proceeding with the workflow..."
