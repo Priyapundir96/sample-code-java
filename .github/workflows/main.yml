@@ -1,0 +1,71 @@
+name: Maven CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:  # Allows for manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # GitHub-hosted runner (e.g., Ubuntu)
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'  # Set to JDK 11
+        distribution: 'adopt'
+
+    - name: Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: Build with Maven
+      run: mvn clean install
+
+    - name: Run Maven tests
+      run: mvn test  # Run all the test cases using Maven Surefire Plugin
+
+    - name: Convert Maven test reports to CSV
+      run: |
+        # Create a directory to store the CSV file
+        mkdir -p test-results
+        # Convert Surefire XML reports to CSV format
+        # Using xmlstarlet to parse XML and convert it into CSV format
+        xmlstarlet sel -T -t -m "//testcase" -v "concat(@classname, ',', @name, ',', string(testcase/@time), '\n')" -n target/surefire-reports/*.xml > test-results/test_results.csv
+        # Display the generated CSV (for debugging)
+        cat test-results/test_results.csv
+
+    - name: Upload CSV test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-csv
+        path: test-results/test_results.csv  # Upload the CSV test results file
+
+    - name: Upload JAR artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: SampleCode-jar
+        path: target/SampleCode.jar  # Adjust path if needed
+
+    - name: Upload test results (Surefire)
+      uses: actions/upload-artifact@v3
+      with:
+        name: surefire-reports
+        path: target/surefire-reports  # Upload Surefire test reports
+
+    - name: Add summary to download the test results CSV
+      run: |
+        echo "### [Download the test results CSV](https://github.com/${{ github.repository }}/suites/${{ github.run_id }}/artifacts)" >> $GITHUB_STEP_SUMMARY
+
